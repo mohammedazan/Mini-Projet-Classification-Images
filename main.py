@@ -3,6 +3,7 @@ from tkinter import ttk, filedialog
 from PIL import Image, ImageTk
 import os
 from model import ImageClassifier
+from sklearn.exceptions import NotFittedError
 
 class PetClassifierApp:
     def __init__(self, root):
@@ -180,15 +181,6 @@ class PetClassifierApp:
                     self.dog_labels[len(self.dog_images)-1].configure(image=photo)
                     self.dog_labels[len(self.dog_images)-1].image = photo
 
-    def setup_testing_tab(self):
-        tk.Label(self.test_tab, text="Test New Image").pack(pady=10)
-        
-        tk.Button(self.test_tab, text="Select Image", 
-                 command=self.select_test_image).pack()
-        
-        self.result_label = tk.Label(self.test_tab, text="")
-        self.result_label.pack(pady=20)
-
     def train_model(self):
         if len(self.cat_images) < 10 or len(self.dog_images) < 10:
             tk.messagebox.showwarning(
@@ -198,14 +190,100 @@ class PetClassifierApp:
         
         self.classifier.train(self.cat_images, self.dog_images)
         tk.messagebox.showinfo("Success", "Model trained successfully!")
+        
+        # Switch to testing tab
+        self.tab_control.select(self.test_tab)
+
+    def setup_testing_tab(self):
+        # Create main container
+        main_container = tk.Frame(self.test_tab)
+        main_container.pack(fill='both', expand=True)
+        
+        # Left sidebar (30% width)
+        left_frame = tk.Frame(main_container, relief='solid', borderwidth=1, width=300)
+        left_frame.pack(side='left', fill='y', padx=10, pady=10)
+        left_frame.pack_propagate(False)
+        
+        # New photo section
+        tk.Label(left_frame, text="Nouvelle photo", font=('Arial', 12, 'bold')).pack(pady=10)
+        
+        # Placeholder for image
+        image_frame = tk.Frame(left_frame, width=200, height=200, relief='solid', borderwidth=1)
+        image_frame.pack(pady=10)
+        image_frame.pack_propagate(False)
+        
+        # Default image icon or text
+        tk.Label(image_frame, text="Chat ou chien ou autre", wraplength=180).pack(expand=True)
+        
+        # Browse button
+        browse_button = tk.Button(left_frame, text="Parcourir", 
+                                command=self.select_test_image,
+                                width=15)
+        browse_button.pack(pady=10)
+        
+        # Main content area (70% width)
+        right_frame = tk.Frame(main_container)
+        right_frame.pack(side='left', fill='both', expand=True, padx=20)
+        
+        # Selected photo section
+        tk.Label(right_frame, text="Photo sélectionnée", font=('Arial', 12, 'bold')).pack(pady=10)
+        
+        # Frame for selected image
+        self.selected_image_frame = tk.Frame(right_frame, width=300, height=300, relief='solid', borderwidth=1)
+        self.selected_image_frame.pack(pady=10)
+        self.selected_image_frame.pack_propagate(False)
+        
+        # Label for selected image
+        self.selected_image_label = tk.Label(self.selected_image_frame)
+        self.selected_image_label.pack(expand=True)
+        
+        # Instruction text
+        tk.Label(right_frame, text="puis cliquer sur prédiction", font=('Arial', 10)).pack(pady=5)
+        
+        # Prediction button
+        predict_button = tk.Button(right_frame, text="Prédiction",
+                                 command=self.make_prediction,
+                                 width=15)
+        predict_button.pack(pady=10)
+        
+        # Result frame with yellow background
+        self.result_frame = tk.Frame(right_frame, bg='#FFF3D4')  # Light yellow
+        self.result_frame.pack(pady=20, fill='x')
+        
+        # Result label
+        self.result_label = tk.Label(self.result_frame, text="", 
+                                    font=('Arial', 11, 'bold'),
+                                    bg='#FFF3D4')  # Same light yellow
+        self.result_label.pack(pady=10)
 
     def select_test_image(self):
         file_path = filedialog.askopenfilename(
             filetypes=[("Image files", "*.jpg *.jpeg *.png")])
         if file_path:
-            prediction, confidence = self.classifier.predict(file_path)
-            self.result_label.config(
-                text=f"Prediction: {prediction}\nConfidence: {confidence:.2f}%")
+            # Store the path for prediction
+            self.test_image_path = file_path
+            # Display the selected image
+            img = Image.open(file_path)
+            img = img.resize((280, 280))  # Resize for display
+            photo = ImageTk.PhotoImage(img)
+            self.selected_image_label.configure(image=photo)
+            self.selected_image_label.image = photo
+
+    def make_prediction(self):
+        if not hasattr(self, 'test_image_path'):
+            tk.messagebox.showwarning("Warning", "Please select an image first!")
+            return
+            
+        try:
+            prediction, confidence = self.classifier.predict(self.test_image_path)
+            result_text = f"{int(confidence)}% {prediction}"
+            self.result_label.config(text=result_text)
+        except NotFittedError:
+            tk.messagebox.showwarning(
+                "Warning", 
+                "Please train the model first before making predictions!")
+            # Switch back to training tab
+            self.tab_control.select(self.train_tab)
 
     def add_image(self, category):
         file_path = filedialog.askopenfilename(
