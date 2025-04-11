@@ -282,9 +282,9 @@ class PetClassifierApp:
             tk.messagebox.showwarning(
                 "Warning", 
                 "Please train the model first before making predictions!")
-            # Switch back to training tab
+            # Switch back to training tab 
             self.tab_control.select(self.train_tab)
-
+  
     def add_image(self, category):
         file_path = filedialog.askopenfilename(
             filetypes=[("Image files", "*.jpg *.jpeg *.png")])
