@@ -1,49 +1,65 @@
 from sklearn.svm import SVC
+from sklearn.preprocessing import StandardScaler
 import numpy as np
 from PIL import Image
 import os
+import cv2
 
 class ImageClassifier:
     def __init__(self):
-        self.model = SVC(probability=True)
-        self.image_size = (150, 150)
+        self.model = SVC(kernel='rbf', probability=True)
+        self.scaler = StandardScaler()
         
-    def preprocess_image(self, image_path):
-        img = Image.open(image_path)
-        img = img.resize(self.image_size)
-        img = img.convert('RGB')  # Ensure RGB format
-        img_array = np.array(img)
-        # Flatten the image array
-        return img_array.reshape(1, -1)[0]
+    def extract_features(self, image_path):
+        # Load and resize image
+        img = cv2.imread(image_path)
+        img = cv2.resize(img, (128, 128))  # Larger size for better features
+        
+        # Extract more robust features
+        features = []
+        
+        # Add color features
+        hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+        features.extend(np.mean(hsv, axis=(0,1)))
+        
+        # Add HOG features
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        hog = cv2.HOGDescriptor()
+        features.extend(hog.compute(gray).flatten())
+        
+        return np.array(features)
 
     def train(self, cat_images, dog_images):
-        # Prepare training data
         X = []
         y = []
         
+        # Process cat images
         for img_path in cat_images:
-            X.append(self.preprocess_image(img_path))
-            y.append(0)  # 0 for cats
+            features = self.extract_features(img_path)
+            X.append(features)
+            y.append('chat')
             
+        # Process dog images
         for img_path in dog_images:
-            X.append(self.preprocess_image(img_path))
-            y.append(1)  # 1 for dogs
-            
-        X = np.array(X)
-        y = np.array(y)
+            features = self.extract_features(img_path)
+            X.append(features)
+            y.append('chien')
         
-        # Train the model
+        # Scale features
+        X = self.scaler.fit_transform(X)
+        
+        # Train model with better parameters
+        self.model = SVC(kernel='rbf', C=10, gamma='scale', probability=True)
         self.model.fit(X, y)
 
     def predict(self, image_path):
-        img = self.preprocess_image(image_path)
-        img = img.reshape(1, -1)
+        # Extract and scale features
+        features = self.extract_features(image_path)
+        features = self.scaler.transform(features.reshape(1, -1))
         
-        prediction = self.model.predict(img)[0]
-        probabilities = self.model.predict_proba(img)[0]
+        # Get prediction and probability
+        prediction = self.model.predict(features)[0]
+        proba = self.model.predict_proba(features)[0]
+        confidence = max(proba) * 100
         
-        # Convert prediction to label and confidence
-        label = "Dog" if prediction == 1 else "Cat"
-        confidence = probabilities[1] if prediction == 1 else probabilities[0]
-        
-        return label, confidence * 100
+        return prediction, confidence

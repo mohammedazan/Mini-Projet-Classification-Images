@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, filedialog
+from tkinter import ttk, filedialog, messagebox
 from PIL import Image, ImageTk
 import os
 from model import ImageClassifier
@@ -10,6 +10,39 @@ class PetClassifierApp:
         self.root = root
         self.root.title("Pet Classifier")
         self.root.geometry("1000x800")
+        
+        # Add custom theme colors
+        self.colors = {
+            'primary': '#2C3E50',      # Dark blue
+            'secondary': '#3498DB',    # Light blue
+            'accent': '#E74C3C',       # Red
+            'background': '#ECF0F1',   # Light gray
+            'text': '#2C3E50',         # Dark blue
+            'success': '#2ECC71'       # Green
+        }
+        
+        # Configure root background
+        self.root.configure(bg=self.colors['background'])
+        
+        # Configure styles
+        style = ttk.Style()
+        style.theme_use('clam')  # Use clam theme as base
+        
+        # Configure notebook style
+        style.configure('Custom.TNotebook', 
+            background=self.colors['background'],
+            padding=5
+        )
+        style.configure('Custom.TNotebook.Tab',
+            background=self.colors['primary'],
+            foreground='white',
+            padding=[20, 10],
+            font=('Arial', 10, 'bold')
+        )
+        style.map('Custom.TNotebook.Tab',
+            background=[('selected', self.colors['secondary'])],
+            foreground=[('selected', 'white')]
+        )
         
         # Initialize lists first
         self.cat_images = []
@@ -25,7 +58,16 @@ class PetClassifierApp:
         self.classifier = ImageClassifier()
         
         # Create main tabs
-        self.tab_control = ttk.Notebook(root)
+        # Style configuration for tabs
+        style = ttk.Style()
+        style.configure('Custom.TNotebook.Tab', 
+            padding=[15, 5],
+            font=('Arial', 10, 'bold'),
+            background='#4a90e2',
+            foreground='white'
+        )
+        
+        self.tab_control = ttk.Notebook(root, style='Custom.TNotebook')
         
         # Training tab
         self.train_tab = ttk.Frame(self.tab_control)
@@ -106,11 +148,15 @@ class PetClassifierApp:
         
         # Create right frame (70% of width)
         right_frame = tk.Frame(main_container)
-        right_frame.pack(side='left', fill='both', expand=True, padx=20)
+        right_frame.pack(side='left', fill='both', expand=True)  # Removed padx=20
         
-        # Cat section in right frame
-        tk.Label(right_frame, text="Sélectionner 10 images de chats", font=('Arial', 11)).pack(pady=10)
-        cat_grid = tk.Frame(right_frame)
+        # Content container for images selection
+        content_frame = tk.Frame(right_frame)
+        content_frame.pack(side='left', fill='both', expand=True)
+        
+        # Cat section in content frame
+        tk.Label(content_frame, text="Sélectionner 10 images de chats", font=('Arial', 11)).pack(pady=10)
+        cat_grid = tk.Frame(content_frame)
         cat_grid.pack(pady=10)
         
         # Create 5x2 grid for cat images
@@ -123,12 +169,26 @@ class PetClassifierApp:
                 label.place(relx=0.5, rely=0.5, anchor='center')
                 self.cat_labels.append(label)
         
-        tk.Button(right_frame, text="Add Cat Image", 
-                 command=lambda: self.add_image("cat")).pack(pady=5)
-    
-        # Dog section in right frame
-        tk.Label(right_frame, text="Sélectionner 10 images de chien", font=('Arial', 11)).pack(pady=10)
-        dog_grid = tk.Frame(right_frame)
+        # Define button style
+        button_style = {
+            'bg': '#4a90e2',
+            'fg': 'white',
+            'font': ('Arial', 10),
+            'relief': 'flat',
+            'padx': 15,
+            'pady': 5,
+            'cursor': 'hand2'
+        }
+        
+        # Add Cat Image button
+        tk.Button(content_frame, 
+                 text="Add Cat Image",
+                 command=lambda: self.add_image("cat"),
+                 **button_style).pack(pady=5)
+        
+        # Dog section in content frame
+        tk.Label(content_frame, text="Sélectionner 10 images de chien", font=('Arial', 11)).pack(pady=10)
+        dog_grid = tk.Frame(content_frame)
         dog_grid.pack(pady=10)
         
         # Create 5x2 grid for dog images
@@ -141,15 +201,33 @@ class PetClassifierApp:
                 label.place(relx=0.5, rely=0.5, anchor='center')
                 self.dog_labels.append(label)
         
-        tk.Button(right_frame, text="Add Dog Image", 
-                 command=lambda: self.add_image("dog")).pack(pady=5)
-    
-        # Train button
-        train_button = tk.Button(right_frame, text="Entrainer", 
-                               command=self.train_model,
-                               width=20,
-                               font=('Arial', 10, 'bold'))
-        train_button.pack(pady=20)
+        # Add Dog Image button with consistent style
+        tk.Button(content_frame, 
+                 text="Add Dog Image",
+                 command=lambda: self.add_image("dog"),
+                 **button_style).pack(pady=5)
+        
+        # Train button container (right side)
+        train_container = tk.Frame(right_frame)
+        train_container.pack(side='right', padx=20, fill='y')
+        
+        # Spacer to push button to bottom
+        tk.Frame(train_container).pack(expand=True)
+        
+        # Train button with custom style
+        train_button = tk.Button(
+            train_container,
+            text="Entrainer",
+            command=self.train_model,
+            bg='#2ECC71',
+            fg='white',
+            font=('Arial', 12, 'bold'),
+            relief='raised',
+            width=10,
+            height=1,
+            cursor='hand2'
+        )
+        train_button.pack(side='bottom', pady=20)
 
     def add_dataset_image(self, container, img_path):
         try:
@@ -183,9 +261,13 @@ class PetClassifierApp:
 
     def train_model(self):
         if len(self.cat_images) < 10 or len(self.dog_images) < 10:
-            tk.messagebox.showwarning(
+            response = tk.messagebox.askokcancel(
                 "Warning", 
-                "Please select 10 images for each category!")
+                "Vous devez saisir des images\nVoulez-vous continuer sans entraînement ?",
+                icon='warning'
+            )
+            if response:  # If user clicks OK
+                self.tab_control.select(self.test_tab)
             return
         
         self.classifier.train(self.cat_images, self.dog_images)
@@ -208,12 +290,16 @@ class PetClassifierApp:
         tk.Label(left_frame, text="Nouvelle photo", font=('Arial', 12, 'bold')).pack(pady=10)
         
         # Placeholder for image
-        image_frame = tk.Frame(left_frame, width=200, height=200, relief='solid', borderwidth=1)
-        image_frame.pack(pady=10)
-        image_frame.pack_propagate(False)
+        self.left_image_frame = tk.Frame(left_frame, width=200, height=200, relief='solid', borderwidth=1)
+        self.left_image_frame.pack(pady=10)
+        self.left_image_frame.pack_propagate(False)
         
-        # Default image icon or text
-        tk.Label(image_frame, text="Chat ou chien ou autre", wraplength=180).pack(expand=True)
+        # Label for selected image in left frame
+        self.left_image_label = tk.Label(self.left_image_frame)
+        self.left_image_label.pack(expand=True)
+        
+        # Text below the image frame
+        tk.Label(left_frame, text="Chat ou chien ou autre", wraplength=180).pack(pady=5)
         
         # Browse button
         browse_button = tk.Button(left_frame, text="Parcourir", 
@@ -238,7 +324,7 @@ class PetClassifierApp:
         self.selected_image_label.pack(expand=True)
         
         # Instruction text
-        tk.Label(right_frame, text="puis cliquer sur prédiction", font=('Arial', 10)).pack(pady=5)
+        #tk.Label(right_frame, text="puis cliquer sur prédiction", font=('Arial', 10)).pack(pady=5)
         
         # Prediction button
         predict_button = tk.Button(right_frame, text="Prédiction",
@@ -246,14 +332,24 @@ class PetClassifierApp:
                                  width=15)
         predict_button.pack(pady=10)
         
-        # Result frame with yellow background
-        self.result_frame = tk.Frame(right_frame, bg='#FFF3D4')  # Light yellow
-        self.result_frame.pack(pady=20, fill='x')
+        # Result frame with gradient-like effect
+        self.result_frame = tk.Frame(right_frame, 
+            bg='#FFE5B4',  # Peach color
+            relief='raised',
+            padx=20,
+            pady=10,
+            highlightthickness=1,
+            highlightbackground='#FFB347'  # Darker peach
+        )
         
-        # Result label
-        self.result_label = tk.Label(self.result_frame, text="", 
-                                    font=('Arial', 11, 'bold'),
-                                    bg='#FFF3D4')  # Same light yellow
+        # Styled result label
+        self.result_label = tk.Label(
+            self.result_frame,
+            text="", 
+            font=('Arial', 12, 'bold'),
+            bg='#FFE5B4',
+            fg='#333333'
+        )
         self.result_label.pack(pady=10)
 
     def select_test_image(self):
@@ -262,12 +358,20 @@ class PetClassifierApp:
         if file_path:
             # Store the path for prediction
             self.test_image_path = file_path
-            # Display the selected image
+            # Display the selected image in both frames
             img = Image.open(file_path)
-            img = img.resize((280, 280))  # Resize for display
-            photo = ImageTk.PhotoImage(img)
-            self.selected_image_label.configure(image=photo)
-            self.selected_image_label.image = photo
+            
+            # Resize for left frame
+            left_img = img.resize((180, 180))
+            left_photo = ImageTk.PhotoImage(left_img)
+            self.left_image_label.configure(image=left_photo)
+            self.left_image_label.image = left_photo
+            
+            # Resize for right frame
+            right_img = img.resize((280, 280))
+            right_photo = ImageTk.PhotoImage(right_img)
+            self.selected_image_label.configure(image=right_photo)
+            self.selected_image_label.image = right_photo
 
     def make_prediction(self):
         if not hasattr(self, 'test_image_path'):
@@ -276,8 +380,10 @@ class PetClassifierApp:
             
         try:
             prediction, confidence = self.classifier.predict(self.test_image_path)
-            result_text = f"{int(confidence)}% {prediction}"
-            self.result_label.config(text=result_text)
+            # Use the update_prediction_result method instead of direct configuration
+            self.update_prediction_result(prediction, confidence)
+            # Make sure the result frame is packed
+            self.result_frame.pack(pady=20, fill='x')
         except NotFittedError:
             tk.messagebox.showwarning(
                 "Warning", 
@@ -306,15 +412,47 @@ class PetClassifierApp:
                     self.dog_labels[len(self.dog_images)-1].image = photo
 
     def load_dataset_images(self, cat_container, dog_container):
+        # Lists to store dataset image paths
+        self.dataset_cat_images = []
+        self.dataset_dog_images = []
+        
         # Load cat images
         for img_name in os.listdir(self.cat_db_path):
             img_path = os.path.join(self.cat_db_path, img_name)
+            self.dataset_cat_images.append(img_path)
             self.add_dataset_image(cat_container, img_path)
         
         # Load dog images
         for img_name in os.listdir(self.dog_db_path):
             img_path = os.path.join(self.dog_db_path, img_name)
+            self.dataset_dog_images.append(img_path)
             self.add_dataset_image(dog_container, img_path)
+            
+        # Train the model with dataset images
+        if self.dataset_cat_images and self.dataset_dog_images:
+            self.classifier.train(self.dataset_cat_images, self.dataset_dog_images)
+
+    def update_prediction_result(self, prediction, confidence):
+        # Create gradient effect
+        result_bg = self.colors['success'] if confidence > 70 else self.colors['accent']
+        
+        self.result_frame.configure(
+            bg=result_bg,
+            relief='raised'
+        )
+        
+        # Animate confidence display
+        def animate_confidence(current=0):
+            if current <= confidence:
+                self.result_label.configure(
+                    text=f"{int(current)}% {prediction}",
+                    bg=result_bg,
+                    fg='white',
+                    font=('Arial', 14, 'bold')
+                )
+                self.root.after(20, lambda: animate_confidence(current + 2))
+        
+        animate_confidence()
 
 if __name__ == "__main__":
     root = tk.Tk()
