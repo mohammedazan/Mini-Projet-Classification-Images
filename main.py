@@ -73,15 +73,33 @@ class PetClassifierApp:
         self.train_tab = ttk.Frame(self.tab_control)
         self.tab_control.add(self.train_tab, text='Training')
         
-        # Testing tab
+        # Testing tab - create but don't add to notebook yet
         self.test_tab = ttk.Frame(self.tab_control)
-        self.tab_control.add(self.test_tab, text='Testing')
         
         self.tab_control.pack(expand=1, fill="both")
         
         # Setup tabs
         self.setup_training_tab()
         self.setup_testing_tab()
+
+    def train_model(self):
+        if len(self.cat_images) < 10 or len(self.dog_images) < 10:
+            response = tk.messagebox.askokcancel(
+                "Warning", 
+                "Vous devez saisir des images\nVoulez-vous continuer sans entraînement ?",
+                icon='warning'
+            )
+            if response:  # If user clicks OK
+                # Add and switch to testing tab
+                self.tab_control.add(self.test_tab, text='Testing')
+                self.tab_control.select(self.test_tab)
+            return
+        
+        self.classifier.train(self.cat_images, self.dog_images)
+        
+        # Add and switch to testing tab immediately without showing success message
+        self.tab_control.add(self.test_tab, text='Testing')
+        self.tab_control.select(self.test_tab)
 
     def setup_training_tab(self):
         # Create main container with left and right frames
@@ -115,15 +133,22 @@ class PetClassifierApp:
         tk.Label(cat_column, text="Chats", font=('Arial', 10, 'bold'), fg='#404040').pack(pady=5)
         tk.Label(dog_column, text="Chiens", font=('Arial', 10, 'bold'), fg='#404040').pack(pady=5)
         
-        # Create scrollable frames with larger width
-        cat_canvas = tk.Canvas(cat_column, width=130)
-        dog_canvas = tk.Canvas(dog_column, width=130)
+        # Create scrollable frames with larger width and height
+        cat_canvas = tk.Canvas(cat_column, width=130, height=400)  # Increased height
+        dog_canvas = tk.Canvas(dog_column, width=130, height=400)  # Increased height
         
         cat_scrollbar = tk.Scrollbar(cat_column, orient="vertical", command=cat_canvas.yview)
         dog_scrollbar = tk.Scrollbar(dog_column, orient="vertical", command=dog_canvas.yview)
         
         cat_scrollable = tk.Frame(cat_canvas)
         dog_scrollable = tk.Frame(dog_canvas)
+        
+        # Configure scrolling with mouse wheel
+        def _on_mousewheel(event, canvas):
+            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+        
+        cat_canvas.bind_all("<MouseWheel>", lambda e: _on_mousewheel(e, cat_canvas))
+        dog_canvas.bind_all("<MouseWheel>", lambda e: _on_mousewheel(e, dog_canvas))
         
         # Configure scrolling
         for scrollable, canvas in [(cat_scrollable, cat_canvas), (dog_scrollable, dog_canvas)]:
@@ -232,13 +257,42 @@ class PetClassifierApp:
     def add_dataset_image(self, container, img_path):
         try:
             img = Image.open(img_path)
-            img = img.resize((120, 120))  # Larger images in dataset
+            img = img.resize((120, 120))
             photo = ImageTk.PhotoImage(img)
-            label = tk.Label(container, image=photo, relief='solid', borderwidth=1)
+            # Add frame to contain image and add padding
+            frame = tk.Frame(container, padx=5, pady=5)
+            frame.pack(fill='x')
+            label = tk.Label(frame, image=photo, relief='solid', borderwidth=1, cursor='hand2')
             label.image = photo
-            label.pack(pady=5)
+            category = 'cat' if 'CAT' in img_path else 'dog'
+            label.bind('<Button-1>', lambda e, path=img_path, cat=category: 
+                      self.select_from_dataset(path, cat))
+            label.pack()
+            return label
         except Exception as e:
             print(f"Error loading image {img_path}: {e}")
+            return None
+
+    def select_from_dataset(self, img_path, category):
+        # Check if we can add more images
+        if category == "cat" and len(self.cat_images) >= 10:
+            return
+        if category == "dog" and len(self.dog_images) >= 10:
+            return
+
+        # Add image to selection
+        img = Image.open(img_path)
+        img = img.resize((120, 120))
+        photo = ImageTk.PhotoImage(img)
+        
+        if category == "cat":
+            self.cat_images.append(img_path)
+            self.cat_labels[len(self.cat_images)-1].configure(image=photo)
+            self.cat_labels[len(self.cat_images)-1].image = photo
+        else:
+            self.dog_images.append(img_path)
+            self.dog_labels[len(self.dog_images)-1].configure(image=photo)
+            self.dog_labels[len(self.dog_images)-1].image = photo
 
     def add_image(self, category):
         file_path = filedialog.askopenfilename(
@@ -258,23 +312,6 @@ class PetClassifierApp:
                     self.dog_images.append(file_path)
                     self.dog_labels[len(self.dog_images)-1].configure(image=photo)
                     self.dog_labels[len(self.dog_images)-1].image = photo
-
-    def train_model(self):
-        if len(self.cat_images) < 10 or len(self.dog_images) < 10:
-            response = tk.messagebox.askokcancel(
-                "Warning", 
-                "Vous devez saisir des images\nVoulez-vous continuer sans entraînement ?",
-                icon='warning'
-            )
-            if response:  # If user clicks OK
-                self.tab_control.select(self.test_tab)
-            return
-        
-        self.classifier.train(self.cat_images, self.dog_images)
-        tk.messagebox.showinfo("Success", "Model trained successfully!")
-        
-        # Switch to testing tab
-        self.tab_control.select(self.test_tab)
 
     def setup_testing_tab(self):
         # Create main container
@@ -433,21 +470,26 @@ class PetClassifierApp:
             self.classifier.train(self.dataset_cat_images, self.dataset_dog_images)
 
     def update_prediction_result(self, prediction, confidence):
-        # Create gradient effect
-        result_bg = self.colors['success'] if confidence > 70 else self.colors['accent']
+        # Set different colors for cat and dog predictions
+        if prediction.lower() == "chat":
+            result_bg = '#2ECC71'  # Green for cats
+            text_color = '#FFFFFF'  # White text
+        else:  # Dog
+            result_bg = '#3498DB'  # Blue for dogs
+            text_color = '#FFFFFF'  # White text
         
         self.result_frame.configure(
             bg=result_bg,
             relief='raised'
         )
         
-        # Animate confidence display
+        # Animate confidence display with different colors
         def animate_confidence(current=0):
             if current <= confidence:
                 self.result_label.configure(
                     text=f"{int(current)}% {prediction}",
                     bg=result_bg,
-                    fg='white',
+                    fg=text_color,
                     font=('Arial', 14, 'bold')
                 )
                 self.root.after(20, lambda: animate_confidence(current + 2))
