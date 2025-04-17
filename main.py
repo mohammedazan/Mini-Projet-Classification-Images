@@ -8,7 +8,7 @@ from sklearn.exceptions import NotFittedError
 class PetClassifierApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Classificateur d'Animaux")
+        self.root.title("Mini projet")
         self.root.geometry("1000x800")
         
         # Theme colors
@@ -158,17 +158,7 @@ class PetClassifierApp:
         content_frame = tk.Frame(right_frame)
         content_frame.pack(side='left', fill='both', expand=True)
         
-        # Cat section
-        tk.Label(content_frame, text="Sélectionner 10 images de chats",
-                font=('Arial', 11)).pack(pady=10)
-        self.cat_labels = self.create_image_grid(content_frame)
-        
-        # Dog section
-        tk.Label(content_frame, text="Sélectionner 10 images de chiens",
-                font=('Arial', 11)).pack(pady=10)
-        self.dog_labels = self.create_image_grid(content_frame)
-        
-        # Buttons
+        # Button style
         button_style = {
             'bg': self.colors['secondary'],
             'fg': 'white',
@@ -180,11 +170,21 @@ class PetClassifierApp:
             'bd': 0
         }
         
-        for category, text in [("cat", "Ajouter une image de chat"),
-                             ("dog", "Ajouter une image de chien")]:
-            tk.Button(content_frame, text=text,
-                     command=lambda c=category: self.add_image(c),
-                     **button_style).pack(pady=5)
+        # Cat section with its button
+        tk.Label(content_frame, text="Sélectionner 10 images de chats",
+                font=('Arial', 11)).pack(pady=10)
+        self.cat_labels = self.create_image_grid(content_frame)
+        tk.Button(content_frame, text="Ajouter une image de chat",
+                 command=lambda: self.add_image("cat"),
+                 **button_style).pack(pady=5)
+        
+        # Dog section with its button
+        tk.Label(content_frame, text="Sélectionner 10 images de chiens",
+                font=('Arial', 11)).pack(pady=10)
+        self.dog_labels = self.create_image_grid(content_frame)
+        tk.Button(content_frame, text="Ajouter une image de chien",
+                 command=lambda: self.add_image("dog"),
+                 **button_style).pack(pady=5)
         
         # Train button
         train_container = tk.Frame(right_frame)
