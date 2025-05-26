@@ -1,81 +1,50 @@
-# 🐱🐶 Mini-Projet : Classification d'Images (Chats & Chiens) 🖼️
+# Application Graphique de Descente de Gradient pour la Régression et la Classification
 
-## 📌 **Description**
-Ce projet est une application de Machine Learning qui permet de classer des images entre **chats** et **chiens**. L'interface est développée en **Tkinter**, et la classification est réalisée avec un modèle pré-entraîné **MobileNetV2** via **TensorFlow**.
-
----
-
-## 🚀 **Fonctionnalités**
-✅ **Création d'un dataset** : Importation d'images de chats et de chiens 📂
-✅ **Entraînement du modèle** : Utilisation de MobileNetV2 🧠
-✅ **Test d'une image** : Prédiction et affichage du pourcentage de confiance 📊
-✅ **Interface utilisateur intuitive** : Conçue avec Tkinter 🎨
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
+  <img src="https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=white" alt="Django">
+  <img src="https://img.shields.io/badge/scikit--learn-F7931E?style=for-the-badge&logo=scikit-learn&logoColor=white" alt="Scikit-learn">
+  <img src="https://img.shields.io/badge/Pandas-150458?style=for-the-badge&logo=pandas&logoColor=white" alt="Pandas">
+  <img src="https://img.shields.io/badge/Matplotlib-11557C?style=for-the-badge&logo=matplotlib&logoColor=white" alt="Matplotlib">
+  <img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white" alt="GitHub">
+</p>
 
 ---
 
-## 🖼️ **Aperçu de l'interface**
-### **Page 1 : Interface d’Entraînement**
-![Training Interface](./Entrainer.png)
+## 🌟 Vue d'ensemble du Projet
 
-### **Page 2 : Interface de Prédiction**
-![Prediction Interface](./Prediction.png)
+Bienvenue dans notre projet innovant ! Cette application graphique est conçue pour démystifier l'algorithme de **Descente de Gradient (Gradient Descent)**, le rendant accessible et intuitif pour tous, des débutants aux experts en apprentissage automatique. Que ce soit pour la **régression** ou la **classification**, notre outil offre une interface conviviale pour explorer, préparer, entraîner et visualiser les performances des modèles de machine learning.
 
----
-
-## 🛠️ **Technologies utilisées**
-🔹 **Python** 🐍
-🔹 **Tkinter** (Interface graphique) 🖥️
-🔹 **TensorFlow** (Modèle MobileNetV2) 🔬
-🔹 **OpenCV / PIL** (Traitement d'images) 🖼️
+**L'objectif principal** est de fournir une plateforme interactive où les utilisateurs peuvent télécharger leurs propres datasets, effectuer un prétraitement des données, appliquer l'algorithme de Descente de Gradient, et ajuster ses paramètres pour observer instantanément l'impact sur la performance du modèle.
 
 ---
 
-## 📦 **Installation**
-Clonez le dépôt et installez les dépendances :
-```bash
-# Cloner le projet
-git clone https://github.com/votre-repo/ml-chat-chien.git
-cd ml-chat-chien
+## ✨ Fonctionnalités Clés
 
-# Installer les dépendances
-pip install -r requirements.txt
-```
+Notre application est dotée des capacités suivantes, conçues pour une expérience utilisateur optimale :
 
----
-
-## 🎯 **Utilisation**
-### 📥 **1. Lancer l'application**
-```bash
-python app.py
-```
-
-### 📤 **2. Charger une image et obtenir une prédiction**
-- Cliquez sur **« Charger une image »** 📂
-- Cliquez sur **« Prédire »** 🤖
-- Obtenez le résultat : **Chat (95%)** ou **Chien (88%)** 🏆
+* **📤 Téléchargement de Dataset (Upload) :** Importez facilement vos fichiers de données (CSV, Excel, etc.) pour commencer votre analyse.
+* **📊 Tableau de Bord Statistique :** Obtenez une vue d'ensemble rapide de votre dataset avec des statistiques descriptives et des visualisations clés.
+* **🧹 Prétraitement des Données :** Des outils intégrés pour nettoyer et préparer vos données (gestion des valeurs manquantes, mise à l'échelle, encodage des variables catégorielles).
+* **🧠 Application de la Descente de Gradient :** Entraînez des modèles de régression et de classification basés sur l'algorithme de Descente de Gradient.
+* **📈 Visualisation de la Performance :** Mesurez et visualisez l'exactitude (accuracy) et d'autres métriques de performance de votre modèle en temps réel.
+* **⚙️ Ajustement des Paramètres (Hyperparamètres) :** Modifiez le taux d'apprentissage ($\alpha$), le nombre d'itérations, et observez l'impact sur la courbe d'apprentissage et la performance.
+* **🎨 Design Intuitif & Conception Robuste :** Une interface utilisateur pensée pour la facilité d'utilisation et une architecture backend solide pour des traitements efficaces.
 
 ---
 
-## 🛠 **Améliorations futures**
-🔹 Ajout d'une option d'entraînement personnalisé 🎯
-🔹 Intégration d'une base de données d'images 📚
-🔹 Interface plus moderne avec Tkinter avancé 🎨
+## 🏛️ Architecture du Projet
 
----
+Notre application est construite sur le puissant framework web **Django**, suivant une architecture client-serveur classique pour garantir scalabilité et performance.
 
-## 🤝 **Contributions**
-Les contributions sont les bienvenues ! Merci de suivre les étapes suivantes :
-1. **Forkez** le repo 🍴
-2. **Créez une branche** (`feature-amélioration`) 🌱
-3. **Commitez vos modifications** (`git commit -m 'Ajout d'une nouvelle fonctionnalité'`) 💡
-4. **Poussez la branche** (`git push origin feature-amélioration`) 🚀
-5. **Ouvrez une Pull Request** 🔥
-
----
-
-## 📜 **Licence**
-Ce projet est sous licence **MIT** 📄
-
----
-
-💡 _Créé avec ❤️ par [Mohammed Azan]_
+**Schéma Conceptuel (À remplacer par une image réelle ou un diagramme Mermaid.js):**
+```mermaid
+graph TD
+    A[Navigateur Utilisateur] -->|Requêtes HTTP / AJAX| B(Application Django)
+    B -->|Frontend (HTML, CSS, JS)| A
+    B -->|Backend (Python)| C(Logiciel de Traitement des Données)
+    B -->|Backend (Python)| D(Logiciel d'Apprentissage Automatique)
+    C -->|Utilise Pandas| E(Dataset Téléchargé)
+    D -->|Utilise Scikit-learn| E
+    D -->|Utilise Matplotlib/Chart.js| F(Visualisations)
+    B -->|Interagit avec| G(Base de Données - SQLite par défaut)
